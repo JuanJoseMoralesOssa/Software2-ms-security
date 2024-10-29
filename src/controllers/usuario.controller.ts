@@ -1,3 +1,4 @@
+import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
@@ -7,23 +8,31 @@ import {
   Where,
 } from '@loopback/repository';
 import {
-  post,
-  param,
+  del,
   get,
   getModelSchemaRef,
+  param,
   patch,
+  post,
   put,
-  del,
   requestBody,
   response,
 } from '@loopback/rest';
+import {LogicaNegocioConfig} from '../config/logica-negocio.config';
 import {Usuario} from '../models';
-import {UsuarioRepository} from '../repositories';
+import {RolRepository, UsuarioRepository} from '../repositories';
+import {LogicaNegocioService, SeguridadUsuarioService} from '../services';
 
 export class UsuarioController {
   constructor(
     @repository(UsuarioRepository)
-    public usuarioRepository : UsuarioRepository,
+    public usuarioRepository: UsuarioRepository,
+    @repository(RolRepository)
+    public rolRepository: RolRepository,
+    @service(SeguridadUsuarioService)
+    public seguridadUsuarioService: SeguridadUsuarioService,
+    @service(LogicaNegocioService)
+    public logicaNegocioService: LogicaNegocioService,
   ) {}
 
   @post('/usuario')
@@ -44,6 +53,31 @@ export class UsuarioController {
     })
     usuario: Omit<Usuario, '_id'>,
   ): Promise<Usuario> {
+    // Crear la clave
+    let clave = this.seguridadUsuarioService.crearClave();
+    console.log(clave);
+    // Cifrar la clave
+    let claveCifrada = this.seguridadUsuarioService.cifrarTexto(clave);
+    // Asignar la clave al usuario
+    usuario.clave = claveCifrada;
+    // Enviar un correo electronico de notificacion
+
+    // Guardar en el servicio de logica
+    let urlLogicaNegocio = LogicaNegocioConfig.urlLogicaNegocio;
+    let rol = await this.rolRepository.findById(usuario.rolId);
+    if (rol.nombre === 'Participante') urlLogicaNegocio += 'participante';
+    else if (rol.nombre === 'Organizador') urlLogicaNegocio += 'organizador';
+
+    let my_usuario = {
+      primerNombre: usuario.primerNombre,
+      segundoNombre: usuario.segundoNombre,
+      primerApellido: usuario.primerApellido,
+      segundoApellido: usuario.segundoApellido,
+      correo: usuario.correo,
+      celular: usuario.celular,
+    };
+
+    await this.logicaNegocioService.crearUsuario(my_usuario, urlLogicaNegocio);
     return this.usuarioRepository.create(usuario);
   }
 
@@ -52,9 +86,7 @@ export class UsuarioController {
     description: 'Usuario model count',
     content: {'application/json': {schema: CountSchema}},
   })
-  async count(
-    @param.where(Usuario) where?: Where<Usuario>,
-  ): Promise<Count> {
+  async count(@param.where(Usuario) where?: Where<Usuario>): Promise<Count> {
     return this.usuarioRepository.count(where);
   }
 
@@ -106,7 +138,8 @@ export class UsuarioController {
   })
   async findById(
     @param.path.string('id') id: string,
-    @param.filter(Usuario, {exclude: 'where'}) filter?: FilterExcludingWhere<Usuario>
+    @param.filter(Usuario, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Usuario>,
   ): Promise<Usuario> {
     return this.usuarioRepository.findById(id, filter);
   }
