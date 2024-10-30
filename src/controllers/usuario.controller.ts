@@ -63,21 +63,19 @@ export class UsuarioController {
     // Enviar un correo electronico de notificacion
 
     // Guardar en el servicio de logica
-    let urlLogicaNegocio = LogicaNegocioConfig.urlLogicaNegocio;
-    let rol = await this.rolRepository.findById(usuario.rolId);
-    if (rol.nombre === 'Participante') urlLogicaNegocio += 'participante';
-    else if (rol.nombre === 'Organizador') urlLogicaNegocio += 'organizador';
+    // let urlLogicaNegocio =
+    //   LogicaNegocioConfig.urlLogicaNegocio + 'participante';
 
-    let my_usuario = {
-      primerNombre: usuario.primerNombre,
-      segundoNombre: usuario.segundoNombre,
-      primerApellido: usuario.primerApellido,
-      segundoApellido: usuario.segundoApellido,
-      correo: usuario.correo,
-      celular: usuario.celular,
-    };
+    // let my_usuario = {
+    //   primerNombre: usuario.primerNombre,
+    //   segundoNombre: usuario.segundoNombre,
+    //   primerApellido: usuario.primerApellido,
+    //   segundoApellido: usuario.segundoApellido,
+    //   correo: usuario.correo,
+    //   celular: usuario.celular,
+    // };
 
-    await this.logicaNegocioService.crearUsuario(my_usuario, urlLogicaNegocio);
+    // await this.logicaNegocioService.crearUsuario(my_usuario, urlLogicaNegocio);
     return this.usuarioRepository.create(usuario);
   }
 
