@@ -26,6 +26,7 @@ import {
   UsuarioRepository,
 } from '../repositories';
 import {LogicaNegocioService, SeguridadUsuarioService} from '../services';
+import {LogicaNegocioConfig} from '../config/logica-negocio.config';
 
 export class UsuarioController {
   constructor(
@@ -64,24 +65,29 @@ export class UsuarioController {
     console.log(clave);
     // Cifrar la clave
     let claveCifrada = this.seguridadUsuarioService.cifrarTexto(clave);
+
+    if (usuario.clave) {
+      claveCifrada = this.seguridadUsuarioService.cifrarTexto(usuario.clave);
+    }
+
     // Asignar la clave al usuario
     usuario.clave = claveCifrada;
     // Enviar un correo electronico de notificacion
 
     // Guardar en el servicio de logica
-    // let urlLogicaNegocio =
-    //   LogicaNegocioConfig.urlLogicaNegocio + 'participante';
+    let urlLogicaNegocio =
+      LogicaNegocioConfig.urlLogicaNegocio + 'participante';
 
-    // let my_usuario = {
-    //   primerNombre: usuario.primerNombre,
-    //   segundoNombre: usuario.segundoNombre,
-    //   primerApellido: usuario.primerApellido,
-    //   segundoApellido: usuario.segundoApellido,
-    //   correo: usuario.correo,
-    //   celular: usuario.celular,
-    // };
+    let my_usuario = {
+      primerNombre: usuario.primerNombre,
+      segundoNombre: usuario.segundoNombre,
+      primerApellido: usuario.primerApellido,
+      segundoApellido: usuario.segundoApellido,
+      correo: usuario.correo,
+      celular: usuario.celular,
+    };
 
-    // await this.logicaNegocioService.crearUsuario(my_usuario, urlLogicaNegocio);
+    await this.logicaNegocioService.crearUsuario(my_usuario, urlLogicaNegocio);
     return this.usuarioRepository.create(usuario);
   }
 
