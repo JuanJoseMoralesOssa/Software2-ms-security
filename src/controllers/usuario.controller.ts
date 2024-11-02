@@ -11,6 +11,7 @@ import {
   del,
   get,
   getModelSchemaRef,
+  HttpErrors,
   param,
   patch,
   post,
@@ -18,9 +19,12 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
-import {LogicaNegocioConfig} from '../config/logica-negocio.config';
-import {Usuario} from '../models';
-import {RolRepository, UsuarioRepository} from '../repositories';
+import {Credenciales, Login, Usuario} from '../models';
+import {
+  LoginRepository,
+  RolRepository,
+  UsuarioRepository,
+} from '../repositories';
 import {LogicaNegocioService, SeguridadUsuarioService} from '../services';
 
 export class UsuarioController {
@@ -29,6 +33,8 @@ export class UsuarioController {
     public usuarioRepository: UsuarioRepository,
     @repository(RolRepository)
     public rolRepository: RolRepository,
+    @repository(LoginRepository)
+    public loginRepository: LoginRepository,
     @service(SeguridadUsuarioService)
     public seguridadUsuarioService: SeguridadUsuarioService,
     @service(LogicaNegocioService)
@@ -54,7 +60,7 @@ export class UsuarioController {
     usuario: Omit<Usuario, '_id'>,
   ): Promise<Usuario> {
     // Crear la clave
-    let clave = this.seguridadUsuarioService.crearClave();
+    let clave = this.seguridadUsuarioService.crearClave(10);
     console.log(clave);
     // Cifrar la clave
     let claveCifrada = this.seguridadUsuarioService.cifrarTexto(clave);
@@ -177,5 +183,48 @@ export class UsuarioController {
   })
   async deleteById(@param.path.string('id') id: string): Promise<void> {
     await this.usuarioRepository.deleteById(id);
+  }
+
+  @post('/identificar-usuario')
+  @response(200, {
+    description: 'Identificar un usuario por correo y clave',
+    content: {'application/json': {schema: getModelSchemaRef(Credenciales)}},
+  })
+  async identificarUsuario(
+    @requestBody({
+      content: {
+        'application/json': {
+          schema: getModelSchemaRef(Credenciales),
+        },
+      },
+    })
+    credentials: Credenciales,
+  ): Promise<object> {
+    let user =
+      await this.seguridadUsuarioService.identificarUsuario(credentials);
+    if (user) {
+      let code2fa = this.seguridadUsuarioService.crearCodigo2fa();
+      console.log(code2fa);
+      let login: Login = new Login();
+      login.usuarioId = user._id!; // Este dato _id si o si va a llegar
+      login.codigo2fa = code2fa;
+      login.estadoCodigo2fa = false;
+      login.token = '';
+      login.estadoToken = false;
+      this.loginRepository.create(login);
+      user.clave = '';
+      // notificar al usuario via correo o sms
+      // let data = {
+      //   destinationMail: user.email,
+      //   destinationName: user.firstName + ' ' + user.secondName,
+      //   mailContent: `${code2fa}`,
+      //   emailSubject: NotificationsConfiguration.subject2fa,
+      // };
+      // let url = NotificationsConfiguration.urlNotifications2fa;
+      // console.log(url);
+      console.log(code2fa);
+      return user;
+    }
+    return new HttpErrors[401]('Credenciales incorrectas. ');
   }
 }
