@@ -22,9 +22,15 @@ export class SeguridadUsuarioService {
     let password = generator.generate({
       length: n,
       numbers: true,
+      symbols: false,
+      lowercase: false,
+      uppercase: false,
+      excludeSimilarCharacters: true,  // Opcional: evita caracteres similares si el generador lo soporta
+      exclude: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" // Excluye letras si es necesario
     });
     return password;
   }
+
 
   /**crearCodigo2fa(): string {
     let cadena = '';

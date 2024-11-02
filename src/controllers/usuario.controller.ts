@@ -19,6 +19,7 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
+import {LogicaNegocioConfig} from '../config/logica-negocio.config';
 import {Credenciales, FactorDeAutenticacionPorCodigo, Login, Usuario} from '../models';
 import {
   LoginRepository,
@@ -26,7 +27,6 @@ import {
   UsuarioRepository,
 } from '../repositories';
 import {LogicaNegocioService, SeguridadUsuarioService} from '../services';
-import {LogicaNegocioConfig} from '../config/logica-negocio.config';
 
 export class UsuarioController {
   constructor(
@@ -209,7 +209,7 @@ export class UsuarioController {
     let user =
       await this.seguridadUsuarioService.identificarUsuario(credentials);
     if (user) {
-      let code2fa = this.seguridadUsuarioService.crearClave(5);
+      let code2fa = this.seguridadUsuarioService.crearClave(4);
       console.log(code2fa);
       let login: Login = new Login();
       login.usuarioId = user._id!; // Este dato _id si o si va a llegar
