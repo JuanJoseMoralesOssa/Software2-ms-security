@@ -1,9 +1,9 @@
-import {/* inject, */ BindingScope, injectable} from '@loopback/core';
+import { /* inject, */ BindingScope, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {HttpErrors} from '@loopback/rest';
 import {SeguridadConfig} from '../config/seguridad.config';
-import {Credenciales, Usuario} from '../models';
-import {UsuarioRepository} from '../repositories';
+import {Credenciales, FactorDeAutenticacionPorCodigo, Usuario} from '../models';
+import {LoginRepository, UsuarioRepository} from '../repositories';
 const generator = require('generate-password');
 const MD5 = require('crypto-js/md5');
 const jwt = require('jsonwebtoken');
@@ -14,7 +14,9 @@ export class SeguridadUsuarioService {
     /* Add @inject to inject parameters */
     @repository(UsuarioRepository)
     public usuarioRepository: UsuarioRepository,
-  ) {}
+    @repository(LoginRepository)
+    public repositorioLogin: LoginRepository
+  ) { }
 
   crearClave(n: number): string {
     let password = generator.generate({
@@ -24,19 +26,30 @@ export class SeguridadUsuarioService {
     return password;
   }
 
-  crearCodigo2fa(): string {
+  /**crearCodigo2fa(): string {
     let cadena = '';
     for (let i = 0; i < 4; i++) {
       let numero = Math.floor(Math.random() * 10);
       cadena += numero;
     }
     return cadena;
-  }
+  }**/
 
+  /**
+  * Cifrar una cadena con método md5
+  * @param cadena texto a cifrar
+  * @returns cadena cifrada con md5
+  */
   cifrarTexto(cadena: string): string {
-    return MD5(cadena).toString();
+    let cadenaCifrada = MD5(cadena).toString();
+    return cadenaCifrada;
   }
 
+  /**
+   * Se busca un usuario por sus credenciales de acceso
+   * @param credenciales credenciales del usuario
+   * @returns usuario encontrado o null
+   */
   async identificarUsuario(
     credenciales: Credenciales,
   ): Promise<Usuario | null> {
@@ -56,28 +69,28 @@ export class SeguridadUsuarioService {
    * @param credenciales2fa credenciales del usuario con el codigo 2 fa
    * @returns el registro del login o null
    */
-  // async validarCodigo2fa(
-  //   credentials2fa: AuthenticationFactorByCode,
-  // ): Promise<User | null> {
-  //   let login = await this.LoginRepository.findOne({
-  //     where: {
-  //       userId: credentials2fa.userId,
-  //       code2fa: credentials2fa.code2fa,
-  //       codeState2fa: false,
-  //     },
-  //   });
-  //   if (login) {
-  //     let usuario = this.userRepository.findById(credentials2fa.userId);
-  //     return usuario;
-  //   }
-  //   return null;
-  // }
+  async validarCodigo2fa(
+    credentials2fa: FactorDeAutenticacionPorCodigo,
+  ): Promise<Usuario | null> {
+    let login = await this.repositorioLogin.findOne({
+      where: {
+        usuarioId: credentials2fa.usuarioId,
+        codigo2fa: credentials2fa.codigo2fa,
+        estadoCodigo2fa: false,
+      },
+    });
+    if (login) {
+      let usuario = await this.usuarioRepository.findById(credentials2fa.usuarioId);
+      return usuario;
+    }
+    return null;
+  }
 
   /**
-   * Generacion de jwt
-   * @param usuario informacion del usuario
-   * @returns token
-   */
+ * Generacion de jwt
+ * @param usuario informacion del usuario
+ * @returns token
+ */
   crearToken(usuario: Usuario): string {
     let data = {
       name: `${usuario.primerNombre} ${usuario.segundoNombre} ${usuario.primerApellido} ${usuario.segundoApellido}`,
