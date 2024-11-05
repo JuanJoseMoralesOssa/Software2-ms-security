@@ -20,13 +20,14 @@ import {
   response,
 } from '@loopback/rest';
 import {LogicaNegocioConfig} from '../config/logica-negocio.config';
+import {NotificacionesConfig} from '../config/notificaciones.config';
 import {Credenciales, FactorDeAutenticacionPorCodigo, Login, Usuario} from '../models';
 import {
   LoginRepository,
   RolRepository,
   UsuarioRepository,
 } from '../repositories';
-import {LogicaNegocioService, SeguridadUsuarioService} from '../services';
+import {LogicaNegocioService, NotificacionesService, SeguridadUsuarioService} from '../services';
 
 export class UsuarioController {
   constructor(
@@ -40,6 +41,8 @@ export class UsuarioController {
     public seguridadUsuarioService: SeguridadUsuarioService,
     @service(LogicaNegocioService)
     public logicaNegocioService: LogicaNegocioService,
+    @service(NotificacionesService)
+    public servicioNotificaciones: NotificacionesService,
   ) { }
 
   @post('/usuario')
@@ -220,14 +223,15 @@ export class UsuarioController {
       this.loginRepository.create(login);
       user.clave = '';
       // notificar al usuario via correo o sms
-      // let data = {
-      //   destinationMail: user.email,
-      //   destinationName: user.firstName + ' ' + user.secondName,
-      //   mailContent: `${code2fa}`,
-      //   emailSubject: NotificationsConfiguration.subject2fa,
-      // };
-      // let url = NotificationsConfiguration.urlNotifications2fa;
-      // console.log(url);
+      let data = {
+        destinationMail: user.correo,
+        destinationName: user.primerNombre + ' ' + user.segundoNombre,
+        mailContent: 'Su Codigo de segundo factor de autenticacion es:  ' + `${code2fa}`,
+        emailSubject: NotificacionesConfig.subject2fa,
+      };
+      let url = NotificacionesConfig.urlNotifications2fa;
+      this.servicioNotificaciones.EnviarNotificacion(data, url);
+      console.log(url);
       console.log(code2fa);
       return user;
     }
