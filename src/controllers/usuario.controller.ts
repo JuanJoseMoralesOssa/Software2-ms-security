@@ -42,7 +42,7 @@ export class UsuarioController {
     @service(LogicaNegocioService)
     public logicaNegocioService: LogicaNegocioService,
     @service(NotificacionesService)
-    public notificacionesService: NotificacionesService,
+    public servicioNotificaciones: NotificacionesService,
   ) { }
 
   @post('/usuario')
@@ -229,7 +229,7 @@ export class UsuarioController {
         asuntoCorreo: NotificacionesConfig.subject2fa
       };
       let url = NotificacionesConfig.urlNotifications2fa;
-      this.notificacionesService.EnviarCorreoElectronico(datos, url);
+      this.servicioNotificaciones.EnviarNotificacion(datos, url);
       console.log(code2fa);
       return user;
     }

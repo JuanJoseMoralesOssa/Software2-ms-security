@@ -1,5 +1,6 @@
-import {injectable, /* inject, */ BindingScope} from '@loopback/core';
-cons fetch = require('node-fetch');
+import { /* inject, */ BindingScope, injectable} from '@loopback/core';
+const fetch = require('node-fetch');
+const axios = require('axios');
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class NotificacionesService {
