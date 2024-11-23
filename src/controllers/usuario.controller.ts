@@ -21,19 +21,13 @@ import {
   response,
 } from '@loopback/rest';
 import {LogicaNegocioConfig} from '../config/logica-negocio.config';
-import {SeguridadConfig} from '../config/seguridad.config';
-import {
-  Credenciales,
-  FactorDeAutenticacionPorCodigo,
-  Login,
-  Usuario,
-} from '../models';
+import {Credenciales, FactorDeAutenticacionPorCodigo, Login, Usuario} from '../models';
 import {
   LoginRepository,
   RolRepository,
   UsuarioRepository,
 } from '../repositories';
-import {LogicaNegocioService, SeguridadUsuarioService} from '../services';
+import {LogicaNegocioService, NotificacionesService, SeguridadUsuarioService} from '../services';
 
 export class UsuarioController {
   constructor(
@@ -47,7 +41,9 @@ export class UsuarioController {
     public seguridadUsuarioService: SeguridadUsuarioService,
     @service(LogicaNegocioService)
     public logicaNegocioService: LogicaNegocioService,
-  ) {}
+    @service(NotificacionesService)
+    public servicioNotificaciones: NotificacionesService,
+  ) { }
 
   @post('/usuario')
   @response(200, {
@@ -245,15 +241,14 @@ export class UsuarioController {
       login.estadoToken = false;
       this.loginRepository.create(login);
       user.clave = '';
-      // notificar al usuario via correo o sms
-      // let data = {
-      //   destinationMail: user.email,
-      //   destinationName: user.firstName + ' ' + user.secondName,
-      //   mailContent: `${code2fa}`,
-      //   emailSubject: NotificationsConfiguration.subject2fa,
-      // };
-      // let url = NotificationsConfiguration.urlNotifications2fa;
-      // console.log(url);
+      let datos = {
+        correoDestino: user.correo,
+        nombreDestino: user.primerNombre+" "+user.primerApellido,
+        contenidoCorreo:'Su codigo de segundo factor de autenticacion es: '+code2fa,
+        asuntoCorreo: NotificacionesConfig.subject2fa
+      };
+      let url = NotificacionesConfig.urlNotifications2fa;
+      this.servicioNotificaciones.EnviarNotificacion(datos, url);
       console.log(code2fa);
       return user;
     }
