@@ -1,3 +1,4 @@
+import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
   Count,
@@ -20,7 +21,13 @@ import {
   response,
 } from '@loopback/rest';
 import {LogicaNegocioConfig} from '../config/logica-negocio.config';
-import {Credenciales, FactorDeAutenticacionPorCodigo, Login, Usuario} from '../models';
+import {SeguridadConfig} from '../config/seguridad.config';
+import {
+  Credenciales,
+  FactorDeAutenticacionPorCodigo,
+  Login,
+  Usuario,
+} from '../models';
 import {
   LoginRepository,
   RolRepository,
@@ -40,7 +47,7 @@ export class UsuarioController {
     public seguridadUsuarioService: SeguridadUsuarioService,
     @service(LogicaNegocioService)
     public logicaNegocioService: LogicaNegocioService,
-  ) { }
+  ) {}
 
   @post('/usuario')
   @response(200, {
@@ -100,6 +107,13 @@ export class UsuarioController {
     return this.usuarioRepository.count(where);
   }
 
+  @authenticate({
+    // esto es relacionando rol-menu y se crea con el controlador de permisos
+    // nombre de la estrategia
+    strategy: 'auth',
+    // le envio el menu al que corresponde, el nombre de la accion
+    options: [SeguridadConfig.menuUsuarioId, SeguridadConfig.listarAccion],
+  })
   @get('/usuario')
   @response(200, {
     description: 'Array of Usuario model instances',
@@ -169,6 +183,12 @@ export class UsuarioController {
     })
     usuario: Usuario,
   ): Promise<void> {
+    if (usuario.clave) {
+      let claveCifrada = this.seguridadUsuarioService.cifrarTexto(
+        usuario.clave,
+      );
+      usuario.clave = claveCifrada;
+    }
     await this.usuarioRepository.updateById(id, usuario);
   }
 
@@ -180,6 +200,12 @@ export class UsuarioController {
     @param.path.string('id') id: string,
     @requestBody() usuario: Usuario,
   ): Promise<void> {
+    if (usuario.clave) {
+      let claveCifrada = this.seguridadUsuarioService.cifrarTexto(
+        usuario.clave,
+      );
+      usuario.clave = claveCifrada;
+    }
     await this.usuarioRepository.replaceById(id, usuario);
   }
 
@@ -248,22 +274,26 @@ export class UsuarioController {
     })
     credentials: FactorDeAutenticacionPorCodigo,
   ): Promise<object> {
-    let usuario = await this.seguridadUsuarioService.validarCodigo2fa(credentials);
+    let usuario =
+      await this.seguridadUsuarioService.validarCodigo2fa(credentials);
     if (usuario) {
       let token = this.seguridadUsuarioService.crearToken(usuario);
       if (usuario) {
-        usuario.clave = "";
+        usuario.clave = '';
         try {
           this.usuarioRepository.logins(usuario._id).patch(
             {
               estadoCodigo2fa: true,
-              token: token
+              token: token,
             },
             {
-              estadoCodigo2fa: false
-            });
+              estadoCodigo2fa: false,
+            },
+          );
         } catch {
-          console.log("No se ha almacenado el cambio del estado de token en la base de datos.")
+          console.log(
+            'No se ha almacenado el cambio del estado de token en la base de datos.',
+          );
         }
         return {
           user: usuario,
@@ -271,6 +301,8 @@ export class UsuarioController {
         };
       }
     }
-    return new HttpErrors[401]("Código de 2fa inválido para el usuario definido.");
+    return new HttpErrors[401](
+      'Código de 2fa inválido para el usuario definido.',
+    );
   }
 }

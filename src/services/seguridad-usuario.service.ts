@@ -112,14 +112,14 @@ export class SeguridadUsuarioService {
    * @param tk el token
    * @returns el _id del rol
    */
-  getRoleByToken(tk: string): string {
+  obtenerRoleDesdeToken(tk: string): string {
     let obj;
     try {
       obj = jwt.verify(tk, SeguridadConfig.keyJWT);
     } catch {
       throw new HttpErrors[401]('Token Invalido');
     }
-    return obj.role;
+    return obj.rol;
   }
 
   /**
