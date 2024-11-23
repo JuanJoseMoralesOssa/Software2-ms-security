@@ -20,7 +20,7 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
-import {LogicaNegocioConfig} from '../config/logica-negocio.config';
+import { LogicaNegocioConfig } from '../config/logica-negocio.config';
 import {Credenciales, FactorDeAutenticacionPorCodigo, Login, Usuario} from '../models';
 import {
   LoginRepository,
@@ -28,6 +28,8 @@ import {
   UsuarioRepository,
 } from '../repositories';
 import {LogicaNegocioService, NotificacionesService, SeguridadUsuarioService} from '../services';
+import {SeguridadConfig} from '../config/seguridad.config';
+import {NotificacionesConfig} from '../config/notificaciones.config';
 
 export class UsuarioController {
   constructor(
