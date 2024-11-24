@@ -1,4 +1,4 @@
-import { /* inject, */ BindingScope, injectable} from '@loopback/core';
+import {/* inject, */ BindingScope, injectable} from '@loopback/core';
 import {repository} from '@loopback/repository';
 import {HttpErrors} from '@loopback/rest';
 import {SeguridadConfig} from '../config/seguridad.config';
@@ -15,8 +15,8 @@ export class SeguridadUsuarioService {
     @repository(UsuarioRepository)
     public usuarioRepository: UsuarioRepository,
     @repository(LoginRepository)
-    public repositorioLogin: LoginRepository
-  ) { }
+    public repositorioLogin: LoginRepository,
+  ) {}
 
   crearClave(n: number): string {
     let password = generator.generate({
@@ -25,12 +25,11 @@ export class SeguridadUsuarioService {
       symbols: false,
       lowercase: false,
       uppercase: false,
-      excludeSimilarCharacters: true,  // Opcional: evita caracteres similares si el generador lo soporta
-      exclude: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ" // Excluye letras si es necesario
+      excludeSimilarCharacters: true, // Opcional: evita caracteres similares si el generador lo soporta
+      exclude: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ', // Excluye letras si es necesario
     });
     return password;
   }
-
 
   /**crearCodigo2fa(): string {
     let cadena = '';
@@ -42,10 +41,10 @@ export class SeguridadUsuarioService {
   }**/
 
   /**
-  * Cifrar una cadena con método md5
-  * @param cadena texto a cifrar
-  * @returns cadena cifrada con md5
-  */
+   * Cifrar una cadena con método md5
+   * @param cadena texto a cifrar
+   * @returns cadena cifrada con md5
+   */
   cifrarTexto(cadena: string): string {
     let cadenaCifrada = MD5(cadena).toString();
     return cadenaCifrada;
@@ -63,8 +62,8 @@ export class SeguridadUsuarioService {
       where: {
         correo: credenciales.correo,
         clave: credenciales.clave,
-        // hashValidationState: true,
-        // accepted: true,
+        //     hashValidationState: true,
+        //     accepted: true,
       },
     });
     return usuario as Usuario;
@@ -86,17 +85,19 @@ export class SeguridadUsuarioService {
       },
     });
     if (login) {
-      let usuario = await this.usuarioRepository.findById(credentials2fa.usuarioId);
+      let usuario = await this.usuarioRepository.findById(
+        credentials2fa.usuarioId,
+      );
       return usuario;
     }
     return null;
   }
 
   /**
- * Generacion de jwt
- * @param usuario informacion del usuario
- * @returns token
- */
+   * Generacion de jwt
+   * @param usuario informacion del usuario
+   * @returns token
+   */
   crearToken(usuario: Usuario): string {
     let data = {
       name: `${usuario.primerNombre} ${usuario.segundoNombre} ${usuario.primerApellido} ${usuario.segundoApellido}`,

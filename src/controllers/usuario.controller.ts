@@ -1,4 +1,3 @@
-import {authenticate} from '@loopback/authentication';
 import {service} from '@loopback/core';
 import {
   Count,
@@ -20,16 +19,24 @@ import {
   requestBody,
   response,
 } from '@loopback/rest';
-import { LogicaNegocioConfig } from '../config/logica-negocio.config';
-import {Credenciales, FactorDeAutenticacionPorCodigo, Login, Usuario} from '../models';
+import {LogicaNegocioConfig} from '../config/logica-negocio.config';
+import {NotificacionesConfig} from '../config/notificaciones.config';
+import {
+  Credenciales,
+  FactorDeAutenticacionPorCodigo,
+  Login,
+  Usuario,
+} from '../models';
 import {
   LoginRepository,
   RolRepository,
   UsuarioRepository,
 } from '../repositories';
-import {LogicaNegocioService, NotificacionesService, SeguridadUsuarioService} from '../services';
-import {SeguridadConfig} from '../config/seguridad.config';
-import {NotificacionesConfig} from '../config/notificaciones.config';
+import {
+  LogicaNegocioService,
+  NotificacionesService,
+  SeguridadUsuarioService,
+} from '../services';
 
 export class UsuarioController {
   constructor(
@@ -45,7 +52,7 @@ export class UsuarioController {
     public logicaNegocioService: LogicaNegocioService,
     @service(NotificacionesService)
     public servicioNotificaciones: NotificacionesService,
-  ) { }
+  ) {}
 
   @post('/usuario')
   @response(200, {
@@ -105,13 +112,13 @@ export class UsuarioController {
     return this.usuarioRepository.count(where);
   }
 
-  @authenticate({
-    // esto es relacionando rol-menu y se crea con el controlador de permisos
-    // nombre de la estrategia
-    strategy: 'auth',
-    // le envio el menu al que corresponde, el nombre de la accion
-    options: [SeguridadConfig.menuUsuarioId, SeguridadConfig.listarAccion],
-  })
+  // @authenticate({
+  //   // esto es relacionando rol-menu y se crea con el controlador de permisos
+  //   // nombre de la estrategia
+  //   strategy: 'auth',
+  //   // le envio el menu al que corresponde, el nombre de la accion
+  //   options: [SeguridadConfig.menuUsuarioId, SeguridadConfig.listarAccion],
+  // })
   @get('/usuario')
   @response(200, {
     description: 'Array of Usuario model instances',
@@ -245,9 +252,10 @@ export class UsuarioController {
       user.clave = '';
       let datos = {
         correoDestino: user.correo,
-        nombreDestino: user.primerNombre+" "+user.primerApellido,
-        contenidoCorreo:'Su codigo de segundo factor de autenticacion es: '+code2fa,
-        asuntoCorreo: NotificacionesConfig.subject2fa
+        nombreDestino: user.primerNombre + ' ' + user.primerApellido,
+        contenidoCorreo:
+          'Su codigo de segundo factor de autenticacion es: ' + code2fa,
+        asuntoCorreo: NotificacionesConfig.subject2fa,
       };
       let url = NotificacionesConfig.urlNotifications2fa;
       this.servicioNotificaciones.EnviarNotificacion(datos, url);
