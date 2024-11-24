@@ -223,13 +223,13 @@ export class UsuarioController {
       );
     }
 
-    if (usuario.rolId != user.rolId && rolActual.nombre == 'Organizador') {
-      const organizadorId =
-        await this.logicaNegocioService.getOrganizadorIdporCorreo(user.correo);
-      console.log(organizadorId);
-      if (organizadorId)
-        await this.logicaNegocioService.deleteOrganizador(organizadorId);
-    }
+    // if (usuario.rolId != user.rolId && rolActual.nombre == 'Organizador') {
+    //   const organizadorId =
+    //     await this.logicaNegocioService.getOrganizadorIdporCorreo(user.correo);
+    //   console.log(organizadorId);
+    //   if (organizadorId)
+    //     await this.logicaNegocioService.deleteOrganizador(organizadorId);
+    // }
 
     if (usuario.clave) {
       let claveCifrada = this.seguridadUsuarioService.cifrarTexto(
