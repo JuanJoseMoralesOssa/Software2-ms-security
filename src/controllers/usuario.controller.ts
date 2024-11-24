@@ -276,16 +276,23 @@ export class UsuarioController {
       login.estadoToken = false;
       this.loginRepository.create(login);
       user.clave = '';
-      let datos = {
-        correoDestino: user.correo,
-        nombreDestino: user.primerNombre + ' ' + user.primerApellido,
-        contenidoCorreo:
-          'Su codigo de segundo factor de autenticacion es: ' + code2fa,
-        asuntoCorreo: NotificacionesConfig.subject2fa,
-      };
+      try {
+        let datos = {
+          correoDestino: user.correo,
+          nombreDestino: user.primerNombre + ' ' + user.primerApellido,
+          asuntoCorreo: NotificacionesConfig.subject2fa,
+          contenidoCorreo: `${code2fa}`
+          };
       let url = NotificacionesConfig.urlNotifications2fa;
-      this.servicioNotificaciones.EnviarNotificacion(datos, url);
-      console.log(code2fa);
+      try {
+        this.servicioNotificaciones.EnviarNotificacion(datos, url);
+        console.log(code2fa);
+      } catch(error) {
+        console.error('Error al enviar notificación: ' + error.message);
+      }
+    } catch(error) {
+      console.error('Error al enviar notificación: ' + error.message);
+    }
       return user;
     }
     return new HttpErrors[401]('Credenciales incorrectas. ');
