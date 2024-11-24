@@ -205,6 +205,32 @@ export class UsuarioController {
     @param.path.string('id') id: string,
     @requestBody() usuario: Usuario,
   ): Promise<void> {
+    const user = await this.usuarioRepository.findById(id);
+    const rolActual = await this.rolRepository.findById(user.rolId);
+    // const rolNuevo = await this.rolRepository.findById(usuario.rolId);
+    if (usuario.rolId != user.rolId && rolActual.nombre == 'Participante') {
+      let usuario = {
+        primerNombre: user.primerNombre,
+        segundoNombre: user.segundoNombre,
+        primerApellido: user.primerApellido,
+        segundoApellido: user.segundoApellido,
+        correo: user.correo,
+        celular: user.celular,
+      };
+      await this.logicaNegocioService.crearUsuario(
+        usuario,
+        LogicaNegocioConfig.urlLogicaNegocio + 'organizador',
+      );
+    }
+
+    if (usuario.rolId != user.rolId && rolActual.nombre == 'Organizador') {
+      const organizadorId =
+        await this.logicaNegocioService.getOrganizadorIdporCorreo(user.correo);
+      console.log(organizadorId);
+      if (organizadorId)
+        await this.logicaNegocioService.deleteOrganizador(organizadorId);
+    }
+
     if (usuario.clave) {
       let claveCifrada = this.seguridadUsuarioService.cifrarTexto(
         usuario.clave,

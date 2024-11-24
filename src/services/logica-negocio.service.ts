@@ -1,5 +1,8 @@
 import {/* inject, */ BindingScope, injectable} from '@loopback/core';
+import {LogicaNegocioConfig} from '../config/logica-negocio.config';
 const fetch = require('node-fetch');
+const axios = require('axios');
+const LOGIC_URL = LogicaNegocioConfig.urlLogicaNegocio;
 
 @injectable({scope: BindingScope.TRANSIENT})
 export class LogicaNegocioService {
@@ -22,4 +25,43 @@ export class LogicaNegocioService {
     }
   }
 
+  async getOrganizadorIdporCorreo(correo: string): Promise<number | null> {
+    try {
+      const response = await axios.get(
+        LOGIC_URL +
+          `organizador?filter={"fields":["id"], "where": {"correo": "${correo}"}}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            accept: 'application/json',
+          },
+        },
+      );
+      if (response.data.length === 0) {
+        return null;
+      }
+      return response.data[0].id;
+    } catch (error) {
+      console.error('Error getting organizer:', error);
+      throw error;
+    }
+  }
+
+  async deleteOrganizador(organizadorId: number): Promise<void> {
+    try {
+      const response = await axios.delete(
+        LOGIC_URL + `organizador/${organizadorId}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            accept: 'application/json',
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      throw error;
+    }
+  }
 }
