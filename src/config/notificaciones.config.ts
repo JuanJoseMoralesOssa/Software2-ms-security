@@ -10,7 +10,7 @@ export namespace NotificacionesConfig {
   export const urlNotifiPasswordRecoveryEmail: string =
     'https://localhost:5258/Notificaciones/password-recovery-mail';
   export const urlNotifications2fa: string =
-    'https://localhost:5258/Notificaciones/enviar-correo-2fa';
+    'http://localhost:5258/Notificaciones/enviar-correo-2fa';
   export const urlNotificationsSms: string =
     'https://localhost:5258/Notificaciones/send-sms';
   export const urlValidateEmailFrontend: string = "http://localhost:4200/security/validate-public-user-hash";
