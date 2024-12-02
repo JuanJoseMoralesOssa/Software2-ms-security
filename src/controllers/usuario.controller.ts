@@ -99,7 +99,7 @@ export class UsuarioController {
       celular: usuario.celular,
     };
 
-    await this.logicaNegocioService.crearUsuario(my_usuario, urlLogicaNegocio);
+    // await this.logicaNegocioService.crearUsuario(my_usuario, urlLogicaNegocio);
     return this.usuarioRepository.create(usuario);
   }
 
@@ -207,6 +207,19 @@ export class UsuarioController {
   ): Promise<void> {
     const user = await this.usuarioRepository.findById(id);
     const rolActual = await this.rolRepository.findById(user.rolId);
+
+    if (!user) {
+      throw new HttpErrors.NotFound(
+        `El usuario con ID ${id} no fue encontrado.`,
+      );
+    }
+
+    if (!rolActual) {
+      throw new HttpErrors.NotFound(
+        `Rol id del usuario con el rol ID ${user.rolId} no encontrado.`,
+      );
+    }
+
     // const rolNuevo = await this.rolRepository.findById(usuario.rolId);
     if (usuario.rolId != user.rolId && rolActual.nombre == 'Participante') {
       let usuario = {
@@ -245,6 +258,22 @@ export class UsuarioController {
     description: 'Usuario DELETE success',
   })
   async deleteById(@param.path.string('id') id: string): Promise<void> {
+    const user = await this.usuarioRepository.findById(id);
+    if (!user) {
+      throw new HttpErrors.NotFound(
+        `El usuario con ID ${id} no fue encontrado.`,
+      );
+    }
+    const organizadorId =
+      await this.logicaNegocioService.getOrganizadorIdporCorreo(user.correo);
+    if (organizadorId)
+      await this.logicaNegocioService.deleteOrganizador(organizadorId);
+
+    const participanteId =
+      await this.logicaNegocioService.getParticipanteIdporCorreo(user.correo);
+    if (participanteId)
+      await this.logicaNegocioService.deleteParticipante(participanteId);
+
     await this.usuarioRepository.deleteById(id);
   }
 
@@ -281,18 +310,18 @@ export class UsuarioController {
           correoDestino: user.correo,
           nombreDestino: user.primerNombre + ' ' + user.primerApellido,
           asuntoCorreo: NotificacionesConfig.subject2fa,
-          contenidoCorreo: `${code2fa}`
-          };
-      let url = NotificacionesConfig.urlNotifications2fa;
-      try {
-        this.servicioNotificaciones.EnviarNotificacion(datos, url);
-        console.log(code2fa);
-      } catch(error) {
+          contenidoCorreo: `${code2fa}`,
+        };
+        let url = NotificacionesConfig.urlNotifications2fa;
+        try {
+          this.servicioNotificaciones.EnviarNotificacion(datos, url);
+          console.log(code2fa);
+        } catch (error) {
+          console.error('Error al enviar notificación: ' + error.message);
+        }
+      } catch (error) {
         console.error('Error al enviar notificación: ' + error.message);
       }
-    } catch(error) {
-      console.error('Error al enviar notificación: ' + error.message);
-    }
       return user;
     }
     return new HttpErrors[401]('Credenciales incorrectas. ');

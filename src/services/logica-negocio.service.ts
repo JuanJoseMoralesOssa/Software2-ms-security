@@ -25,6 +25,46 @@ export class LogicaNegocioService {
     }
   }
 
+  async getParticipanteIdporCorreo(correo: string): Promise<number | null> {
+    try {
+      const response = await axios.get(
+        LOGIC_URL +
+          `participante?filter={"fields":["id"], "where": {"correo": "${correo}"}}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            accept: 'application/json',
+          },
+        },
+      );
+      if (response.data.length === 0) {
+        return null;
+      }
+      return response.data[0].id;
+    } catch (error) {
+      console.error('Error getting organizer:', error);
+      throw error;
+    }
+  }
+
+  async deleteParticipante(participanteId: number): Promise<void> {
+    try {
+      const response = await axios.delete(
+        LOGIC_URL + `participante/${participanteId}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            accept: 'application/json',
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      throw error;
+    }
+  }
+
   async getOrganizadorIdporCorreo(correo: string): Promise<number | null> {
     try {
       const response = await axios.get(
