@@ -99,7 +99,7 @@ export class UsuarioController {
       celular: usuario.celular,
     };
 
-    // await this.logicaNegocioService.crearUsuario(my_usuario, urlLogicaNegocio);
+    await this.logicaNegocioService.crearUsuario(my_usuario, urlLogicaNegocio);
     return this.usuarioRepository.create(usuario);
   }
 
