@@ -72,14 +72,39 @@ export class UsuarioController {
     })
     usuario: Omit<Usuario, '_id'>,
   ): Promise<Usuario> {
+    // Verificar si el usuario ya existe
+    let usuarioExistente = await this.usuarioRepository.findOne({
+      where: {correo: usuario.correo},
+    });
+
+    if (usuarioExistente) {
+      throw new HttpErrors[400]('El usuario ya existe.');
+    }
+
+    // Verificar si el rol existe
+    // let rol = await this.rolRepository.findById(usuario.rol
+    // if (!rol) {
+    //   throw new HttpErrors[400]('El rol no existe.');
+    // }
+
+    // Verifica si el correo es unico o ya no hay un usuario con ese correo
+    let usuarioExistenteCorreo = await this.usuarioRepository.findOne({
+      where: {correo: usuario.correo},
+    });
+    if (usuarioExistenteCorreo) {
+      throw new HttpErrors[400]('El correo ya esta en uso.');
+    }
+
     // Crear la clave
     let clave = this.seguridadUsuarioService.crearClave(10);
     console.log(clave);
     // Cifrar la clave
-    let claveCifrada = this.seguridadUsuarioService.cifrarTexto(clave);
 
+    let claveCifrada;
     if (usuario.clave) {
       claveCifrada = this.seguridadUsuarioService.cifrarTexto(usuario.clave);
+    } else {
+      claveCifrada = this.seguridadUsuarioService.cifrarTexto(clave);
     }
 
     // Asignar la clave al usuario
