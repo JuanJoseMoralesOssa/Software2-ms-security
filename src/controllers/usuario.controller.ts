@@ -188,11 +188,15 @@ export class UsuarioController {
     })
     usuario: Usuario,
   ): Promise<void> {
+    const user = await this.usuarioRepository.findById(id);
+
     if (usuario.clave) {
       let claveCifrada = this.seguridadUsuarioService.cifrarTexto(
         usuario.clave,
       );
       usuario.clave = claveCifrada;
+    } else {
+      usuario.clave = user.clave;
     }
     await this.usuarioRepository.updateById(id, usuario);
   }
@@ -249,6 +253,8 @@ export class UsuarioController {
         usuario.clave,
       );
       usuario.clave = claveCifrada;
+    } else {
+      usuario.clave = user.clave;
     }
     await this.usuarioRepository.replaceById(id, usuario);
   }
